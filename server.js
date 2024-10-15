@@ -31,7 +31,28 @@ app.get('/', (req, res) => {
                 }
             }
 
+            // Deletes V5R360 chars
+            {
+                let done = false
+                let lastIndex = 0
+                while (!done) {
+                    let iSUM = icsOUT.indexOf('SUMMARY:', lastIndex)
+                    let iSTART = iSUM + 8
+                    let iEND = iSTART + 7
+                    //let iBEGIN = icsOUT.lastIndexOf('BEGIN:VEVENT', iGROEP)
+                    //let iEND = icsOUT.indexOf('BEGIN:VEVENT', iGROEP)
+                    lastIndex = iSUM + 1
+                    if (iSUM == -1) {
+                        done = true
+                    } else {
+                        icsOUT = icsOUT.substr(0, iSTART) + icsOUT.substr(iEND)
+                    }
+                }
+            }
 
+
+            let regex = / \(MW\)/g;
+            icsOUT = icsOUT.replace(regex, "")
 
             // Makes all sumaries more readable and compact
             {
@@ -49,6 +70,8 @@ app.get('/', (req, res) => {
                     }
                 }
             }
+
+            console.log(icsOUT)
 
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
             res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
