@@ -12,23 +12,41 @@ app.get('/', (req, res) => {
             const value = url.searchParams.get('value'); // Extracted dynamically from the URL
             const dateTime = new Date().toISOString().replace(/[:.]/g, '-'); // Format date and time
             const fileName = `ToledoAgenda_${value}_${dateTime}.ics`;
-
-            //console.log(icsIN)
-
             let icsOUT = icsIN
-            let done = false
-            let lastIndex = 0
 
-            while (!done) {
-                let iSUM = icsOUT.indexOf('SUMMARY:', lastIndex)
-                console.log(iSUM)
-                let iSLASH = icsOUT.indexOf('\\', iSUM)
-                let iEND = icsOUT.indexOf('LOCATION:', iSLASH)
-                lastIndex = iSUM + 1
-                if (iSUM == -1) {
-                    done = true
-                } else {
-                    icsOUT = icsOUT.substr(0, iSLASH) + "\n" + icsOUT.substr(iEND)
+            // Deletes all groep 2 events
+            {
+                let done = false
+                let lastIndex = 0
+                while (!done) {
+                    let iGROEP = icsOUT.indexOf('Groep 2', lastIndex)
+                    let iBEGIN = icsOUT.lastIndexOf('BEGIN:VEVENT', iGROEP)
+                    let iEND = icsOUT.indexOf('BEGIN:VEVENT', iGROEP)
+                    lastIndex = iEND + 1
+                    if (iGROEP == -1) {
+                        done = true
+                    } else {
+                        icsOUT = icsOUT.substr(0, iBEGIN) + "\n" + icsOUT.substr(iEND)
+                    }
+                }
+            }
+
+
+
+            // Makes all sumaries more readable and compact
+            {
+                let done = false
+                let lastIndex = 0
+                while (!done) {
+                    let iSUM = icsOUT.indexOf('SUMMARY:', lastIndex)
+                    let iSLASH = icsOUT.indexOf('\\', iSUM)
+                    let iEND = icsOUT.indexOf('LOCATION:', iSLASH)
+                    lastIndex = iSUM + 1
+                    if (iSUM == -1) {
+                        done = true
+                    } else {
+                        icsOUT = icsOUT.substr(0, iSLASH) + "\n" + icsOUT.substr(iEND)
+                    }
                 }
             }
 
