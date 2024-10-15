@@ -21,18 +21,23 @@ app.get('/', (req, res) => {
 
             while (!done) {
                 let iSUM = icsOUT.indexOf('SUMMARY:', lastIndex)
+                console.log(iSUM)
                 let iSLASH = icsOUT.indexOf('\\', iSUM)
                 let iEND = icsOUT.indexOf('LOCATION:', iSLASH)
-                icsOUT = icsOUT.substr(0, iSLASH) + "\n" + icsOUT.substr(iEND)
                 lastIndex = iSUM + 1
                 if (iSUM == -1) {
                     done = true
+                } else {
+                    icsOUT = icsOUT.substr(0, iSLASH) + "\n" + icsOUT.substr(iEND)
                 }
             }
 
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-            res.setHeader('Content-Type', 'text/calendar');
-            console.log("Sending ICS file")
+            res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            console.log("Sending ICS file");
             res.send(icsOUT);
         })
         .catch(error => {
