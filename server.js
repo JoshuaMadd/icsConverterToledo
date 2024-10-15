@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
     axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029')
@@ -30,10 +30,9 @@ app.get('/', (req, res) => {
                 }
             }
 
-            console.log(icsOUT)
-
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
             res.setHeader('Content-Type', 'text/calendar');
+            console.log("Sending ICS file")
             res.send(icsOUT);
         })
         .catch(error => {
