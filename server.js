@@ -1,10 +1,11 @@
 const express = require('express');
 const axios = require('axios');
+const ical2json = require("ical2json");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
+app.get('/old', (req, res) => {
     axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029')
         .then(response => {
             const icsIN = response.data;
@@ -15,6 +16,23 @@ app.get('/', (req, res) => {
             let icsOUT = icsIN
 
             // Deletes all groep 2 events
+            {
+                let done = false
+                let lastIndex = 0
+                while (!done) {
+                    let iGROEP = icsOUT.indexOf('Groep 2', lastIndex)
+                    let iBEGIN = icsOUT.lastIndexOf('BEGIN:VEVENT', iGROEP)
+                    let iEND = icsOUT.indexOf('BEGIN:VEVENT', iGROEP)
+                    lastIndex = iEND + 1
+                    if (iGROEP == -1) {
+                        done = true
+                    } else {
+                        icsOUT = icsOUT.substr(0, iBEGIN) + "\n" + icsOUT.substr(iEND)
+                    }
+                }
+            }
+
+            // Clean up location
             {
                 let done = false
                 let lastIndex = 0
@@ -71,8 +89,6 @@ app.get('/', (req, res) => {
                 }
             }
 
-            console.log(icsOUT)
-
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
             res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -85,6 +101,82 @@ app.get('/', (req, res) => {
             console.error('Error fetching the ICS file:', error);
             res.status(500).send('Error fetching the ICS file');
         });
+});
+
+app.get('/', (req, res) => {
+    axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029')
+        .then(response => {
+            const icsIN = response.data;
+            const url = new URL('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029');
+            const value = url.searchParams.get('value'); // Extracted dynamically from the URL
+            const dateTime = new Date().toISOString().replace(/[:.]/g, '-'); // Format date and time
+            const fileName = `ToledoAgenda_${value}_${dateTime}.ics`;
+            let output = ical2json.convert(icsIN);
+
+            //FILTER OUT GROEP 2 EVENTS
+            output.VCALENDAR[0].VEVENT = output.VCALENDAR[0].VEVENT.filter(event => !event.SUMMARY.includes('Groep 2'));
+
+            output.VCALENDAR[0].VEVENT.forEach(event => {
+                //BACKUP TO DESCRIPTION
+                event.DESCRIPTION = event.SUMMARY + "\n\n" + event.LOCATION + "\n\n" + event.DESCRIPTION;
+
+                //CLEAN UP SUMMARY
+                event.SUMMARY = event.SUMMARY.replace(' (MW)', '');
+                event.SUMMARY = event.SUMMARY.substring(7, event.SUMMARY.indexOf('\\')).trim();
+
+                //CLEAN UP LOCATION
+                if (event.LOCATION.indexOf('.') !== -1) {
+                    event.LOCATION = event.LOCATION.substring(0, event.LOCATION.indexOf(" ", event.LOCATION.indexOf('.'))).trim();
+                }
+            });
+
+            let icsOutput = ical2json.revert(output);
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            console.log("Sending ICS file");
+            res.send(icsOutput);
+        })
+});
+
+app.get('/new', (req, res) => {
+    axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029')
+        .then(response => {
+            const icsIN = response.data;
+            const url = new URL('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029');
+            const value = url.searchParams.get('value'); // Extracted dynamically from the URL
+            const dateTime = new Date().toISOString().replace(/[:.]/g, '-'); // Format date and time
+            const fileName = `ToledoAgenda_${value}_${dateTime}.ics`;
+            let output = ical2json.convert(icsIN);
+
+            //FILTER OUT GROEP 2 EVENTS
+            output.VCALENDAR[0].VEVENT = output.VCALENDAR[0].VEVENT.filter(event => !event.SUMMARY.includes('Groep 2'));
+
+            output.VCALENDAR[0].VEVENT.forEach(event => {
+                //BACKUP TO DESCRIPTION
+                event.DESCRIPTION = event.SUMMARY + "\n\n" + event.LOCATION + "\n\n" + event.DESCRIPTION;
+
+                //CLEAN UP SUMMARY
+                event.SUMMARY = event.SUMMARY.replace(' (MW)', '');
+                event.SUMMARY = event.SUMMARY.substring(7, event.SUMMARY.indexOf('\\')).trim();
+
+                //CLEAN UP LOCATION
+                if (event.LOCATION.indexOf('.') !== -1) {
+                    event.LOCATION = event.LOCATION.substring(0, event.LOCATION.indexOf(" ", event.LOCATION.indexOf('.'))).trim();
+                }
+            });
+
+            let icsOutput = ical2json.revert(output);
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            console.log("Sending ICS file");
+            res.send(icsOutput);
+        })
 });
 
 app.listen(port, () => {
