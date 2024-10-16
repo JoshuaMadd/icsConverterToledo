@@ -128,6 +128,7 @@ app.get('/', (req, res) => {
                 if (event.LOCATION.indexOf('.') !== -1) {
                     event.LOCATION = event.LOCATION.substring(0, event.LOCATION.indexOf(" ", event.LOCATION.indexOf('.'))).trim();
                 }
+                event.LOCATION = event.LOCATION.replace('- ', '');
             });
 
             let icsOutput = ical2json.revert(output);
@@ -166,6 +167,7 @@ app.get('/new', (req, res) => {
                 if (event.LOCATION.indexOf('.') !== -1) {
                     event.LOCATION = event.LOCATION.substring(0, event.LOCATION.indexOf(" ", event.LOCATION.indexOf('.'))).trim();
                 }
+                event.LOCATION = event.LOCATION.replace('- ', '');
             });
 
             let icsOutput = ical2json.revert(output);
