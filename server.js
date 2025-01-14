@@ -103,12 +103,11 @@ app.get('/old', (req, res) => {
         });
 });
 
-app.get('/', (req, res) => {
-    axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029')
+app.get('/:urlId', (req, res) => {
+    axios.get('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=' + req.params.urlId /*DDCDECA0F2D01EEEB5EAE634F510D029*/)
         .then(response => {
             const icsIN = response.data;
-            const url = new URL('https://cloud.timeedit.net/be_kuleuven/web/public/s.ics?sid=7&type=student&field=student.schedule.id&value=DDCDECA0F2D01EEEB5EAE634F510D029');
-            const value = url.searchParams.get('value'); // Extracted dynamically from the URL
+            const value = req.params.urlId;
             const dateTime = new Date().toISOString().replace(/[:.]/g, '-'); // Format date and time
             const fileName = `ToledoAgenda_${value}_${dateTime}.ics`;
             let output = ical2json.convert(icsIN);
@@ -157,7 +156,7 @@ app.get('/new', (req, res) => {
 
             output.VCALENDAR[0].VEVENT.forEach(event => {
                 //BACKUP TO DESCRIPTION
-                event.DESCRIPTION = event.SUMMARY + "\n\n" + event.LOCATION + "\n\n" + event.DESCRIPTION;
+                event.DESCRIPTION = event.SUMMARY + " |Location: " + event.LOCATION + " |Description: " + event.DESCRIPTION;
 
                 //CLEAN UP SUMMARY
                 event.SUMMARY = event.SUMMARY.replace(' (MW)', '');

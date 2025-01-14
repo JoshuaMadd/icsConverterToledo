@@ -3,3 +3,13 @@ GET http://localhost:3000/
 ###
 
 GET http://localhost:3000/new
+
+###
+
+# Joshua
+GET http://localhost:3000/DDCDECA0F2D01EEEB5EAE634F510D029
+
+###
+
+#Lefty
+GET http://localhost:3000/DDCDECA0F2D01EEEB5EB005B6F3E9029
